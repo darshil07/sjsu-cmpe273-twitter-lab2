@@ -1,7 +1,28 @@
 var ejs = require("ejs");
 var mysql = require('./mysql');
+var mongo = require("./mongo");
+var mongoURL = "mongodb://localhost:27017/test";
+var Users = require('./model');
 
 exports.userSearchResults = function(req, res) {
+
+	console.log(req.param("searchUsername"));
+	console.log("in userSearchResults node");
+
+	var searchUsername = req.param("searchUsername");
+	//var abc = req.param("tweet");
+
+	//console.log(abc);
+	console.log("searchUsername :: " + searchUsername);
+
+	req.session.searchUsername = searchUsername;
+
+	res.send({statusCode:200});
+
+	
+}
+
+/*exports.userSearchResults = function(req, res) {
 
 	//if(req.session.searchUsername == '') {
 
@@ -17,23 +38,61 @@ exports.userSearchResults = function(req, res) {
 		req.session.searchUsername = searchUsername;
 
 		res.send({statusCode:200});
-}
+}*/
 
 exports.usrSearchResults = function(req, res) {
 
 	console.log("in usrSearchResults");
 
-	console.log(req.session.searchUsername);
-	console.log(req.session.userid);
+	//console.log(req.session.searchUsername);
+	console.log("userid :: " + req.session.userid);
+	console.log("searchUsername :: " + req.session.searchUsername);
 	res.render("userSearchResults", {"searchUsername" : req.session.searchUsername, "username" : req.session.username, "userid" : req.session.userid, "email" : req.session.email});
 }
 
 exports.searchUser = function(req, res) {
 	console.log("in userSearch node");
 
+	//var searchUsername = req.session.searchUsername;
+	//var searchUsername = "/.*" + req.param("searchUsername") + ".*/"; // /.*sh.*/ Finds the substring 'sh'	
 	var searchUsername = req.session.searchUsername;
-	//var searchUsername = req.param("searchUsername");
-	var searchUserQuery = "select userid, username, firstname, lastname from users where username like '%" + searchUsername + "%'";
+	console.log("searchUsername :: " + searchUsername);
+
+	//Search by username
+	Users.find({username : new RegExp('.*' + searchUsername + '.*', "i")}, function(err, data) { 
+		if(err) {
+			console.log("Error :: " + err);
+
+			json_responses = {"statusCode" : 401};
+			res.send(json_responses); 
+		} else {
+			console.log("data is :: " + data);
+			console.log("data.length :: " + data.length);
+			if(data) {
+				if(data.length > 0) {
+					json_responses = {
+									"statusCode" : 200, 
+									"userid" : req.session.userid,
+									"username" : req.session.username,
+									"searchresult" : data,
+									"searchUsername" : req.session.searchUsername
+								};
+				} else {
+					json_responses = {
+									"statusCode" : 200, 
+									"userid" : req.session.userid,
+									"username" : req.session.username,
+									"searchresult" : 0,
+									"searchUsername" : req.session.searchUsername
+								};
+				}
+				
+				res.send(json_responses);
+			}
+		}
+	});
+
+	/*var searchUserQuery = "select userid, username, firstname, lastname from users where username like '%" + searchUsername + "%'";
 
 	mysql.fetchData(function(err,results) {
 
@@ -59,7 +118,7 @@ exports.searchUser = function(req, res) {
 
 			}
 		}
-	},searchUserQuery);
+	},searchUserQuery);*/
 }
 
 exports.searchHashTag = function(req, res) {

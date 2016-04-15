@@ -4,70 +4,30 @@ var homepage = angular.module('homepage',['ngRoute']);
 
 homepage.controller('homepage', function($scope, $http, $route) {
 	
-	//get Tweet Count
+
+	//get Tweet, Follower, Following Count
 	$http({
 		method : "POST",
-		url : "/gettweetcount",
+		url : "/gettweetfollowerfollowingcount",
 	}).success(function(data) {
-		console.log("in getTweetCount success");
+		console.log("in getTweetFollowerFollowingCount success");
 		console.log(data);
 		if(data.statusCode==200) {
 			console.log("statusCode==200");
-			console.log(data.results);
-			console.log(data.results[0].countoftweets);
-			$scope.tweetcount = "Tweets : " + data.results[0].countoftweets;
+			console.log("Tweet Count :: " + data.tweetcount);
+			console.log("Follower Count :: " + data.followercount);
+			console.log("Following Count :: " + data.followingcount);
 
+			$scope.tweetcount = "Tweets : " + data.tweetcount;
+			$scope.followingcount = "Following : " + data.followingcount;
+			$scope.followercount = "Following : " + data.followercount;
 		}
 		else if(data.statusCode == 401) {
 			console.log("statusCode=401");
 		}
 	}).error(function(error) {
-		console.log("in getTweetCount Error");
+		console.log("in getTweetFollowerFollowingCount Error");
 	});
-
-
-	//get following Count
-	$http({
-		method : "POST",
-		url : "/getfollowingcount",
-	}).success(function(data) {
-		console.log("in getfollowingcount success");
-		console.log(data);
-		if(data.statusCode==200) {
-			console.log("statusCode==200");
-			console.log(data.results);
-			console.log(data.results[0].countoffollowing);
-			$scope.followingcount = "Following : " + data.results[0].countoffollowing;
-
-		}
-		else if(data.statusCode == 401) {
-			console.log("statusCode=401");
-		}
-	}).error(function(error) {
-		console.log("in followerscount Error");
-	});
-
-	//get follower Count
-	$http({
-		method : "POST",
-		url : "/getfollowercount",
-	}).success(function(data) {
-		console.log("in getfollowercount success");
-		console.log(data);
-		if(data.statusCode==200) {
-			console.log("statusCode==200");
-			console.log(data.results);
-			console.log(data.results[0].countoffollower);
-			$scope.followercount = "Followers : " + data.results[0].countoffollower;
-
-		}
-		else if(data.statusCode == 401) {
-			console.log("statusCode=401");
-		}
-	}).error(function(error) {
-		console.log("in followercount Error");
-	});
-
 
 	//get following users' tweets
 	$http({
@@ -268,7 +228,9 @@ homepage.controller('homepage', function($scope, $http, $route) {
 				}
 			}).error(function(error) {
 				console.log("in error of tweet");
-			})
+				console.log(error);
+				window.alert("ERROR! Tweet can not be posted! Please try again");
+			});
 	};
 
 	$scope.search = function() {
@@ -284,9 +246,9 @@ homepage.controller('homepage', function($scope, $http, $route) {
 				console.log("searchString:" + searchStr);
 				
 				$http({
-					method : "POST",
+					method : "GET",
 					url : "/userSearchResults",
-					data : {
+					params : {
 						searchUsername : searchStr
 					}
 				}).success( function(data) {
@@ -313,7 +275,7 @@ homepage.controller('homepage', function($scope, $http, $route) {
 					console.log("in hashtag search");
 
 					$http({
-						method : 'POST',
+						method : 'GET',
 						url : '/searchHashTag',
 						data : {
 							hashtag : searchStr

@@ -109,6 +109,7 @@ searchHash.controller('searchHash', function($scope, $http, $route, $sce) {
 				}
 			}).error(function(error) {
 				console.log("in error of tweet");
+				window.alert("ERROR! Tweet can not be posted! Please try again");
 			})
 	};
 

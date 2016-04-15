@@ -19,11 +19,13 @@ var tweetSchema = new Schema({
 	tweetid : Number,
 	tweetstring : {
 				type : String,
+				required : true
 			},
-	date : {
-				type : Date,
-				default : Date.now
-			},
+
+	tweetdate : {
+					type : Date,
+					default : Date.now
+				},
 	hashtag : {
 				type : []
 				//get:
@@ -38,10 +40,28 @@ var tweetSchema = new Schema({
 					type : Boolean,
 					required : false
 				},
-	ownerid : {
-				type : Schema.ObjectId,
-				ref : 'users'
-				}
+	//Data needed for retweet
+	ownername : {
+				type : String,
+				required : false
+				/*type : Schema.ObjectId,
+				ref : 'users'*/
+				},
+	ownerfirstname : {
+						type : String,
+						required : false
+					},
+	ownerlastname : {
+						type : String,
+						required : false
+					},
+	originaltweetdate : {
+							type : Date,
+							required : false
+						},
+
+},{
+	versionKey : false
 });
 
 var usersSchema = new Schema({
@@ -83,17 +103,17 @@ var usersSchema = new Schema({
 			},
 	follower : [
 					{
-						type : Schema.ObjectId,
-						ref : 'users'
+						type : String //username of follwers
 					}
 			],
 	following : [
 					{
-						type : Schema.ObjectId,
-						ref : 'users'
+						type : String //username of follwing users
 					}
 			],
 	tweet : [tweetSchema]
+},{
+	versionKey : false
 });
 
 
@@ -103,7 +123,7 @@ var Users = mongoose.model('users', usersSchema);
 var Tweets = mongoose.model('tweets', tweetSchema);
 
 usersSchema.plugin(autoIncrement.plugin, 'Users');
-tweetSchema.plugin(autoIncrement.plugin, {model : 'Tweets', field : 'tweetid'});
+usersSchema.plugin(autoIncrement.plugin, {model : 'Users', field : 'tweet.tweetid'});
 
 //Availability to the entire application
 module.exports = Users;

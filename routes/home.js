@@ -253,8 +253,9 @@ var doSignup = function(newUser, res) {
 	console.log("New User Details :: ");
 	console.log(newUser[0]);
 
+	//Signing up the NEW user
 	var usernew = new Users({
-		username : newUser[0].username,
+		username : "@" + newUser[0].username,
 		password : newUser[0].password,
 		firstname : newUser[0].firstname,
 		lastname : newUser[0].lastname,
@@ -278,6 +279,40 @@ var doSignup = function(newUser, res) {
 		}
 	});
 }
+
+
+exports.gettweetfollowerfollowingcount = function(req, res) {
+	console.log("in home.gettweetfollowerfollowingcount node");
+	//var getTweetCountQuery = "select count(tweet) as countoftweets from tweets where userid=" + req.session.userid;
+	
+	Users.findOne({email : req.session.email}, function(err, data) {
+		
+		if(err) {
+			console.log("Error :: " + err);
+			json_responses = {"statusCode" : 401};
+			res.send(json_responses);
+		} else {
+			//console.log("data is :: " + data);
+
+			console.log("Tweet Count :: " + data.tweet.length);
+			console.log("Follower Count :: " + data.follower.length);
+			console.log("Following Count :: " + data.following.length);
+
+			json_responses = {
+								"statusCode" : 200, 
+								"tweetcount" : data.tweet.length, 
+								"followercount" : data.follower.length, 
+								"followingcount" : data.following.length
+							};
+			res.send(json_responses);
+		}
+
+	});
+}
+
+
+
+
 
 
 
@@ -354,103 +389,7 @@ function aftersignup(req, res) {
 
 
 
-function gettweetcount(req, res) {
-	console.log("in home.gettweetcount node");
-	//var getTweetCountQuery = "select count(tweet) as countoftweets from tweets where userid=" + req.session.userid;
-	var getTweetCountQuery = "select (count1 + count2) as countoftweets from (select count(DISTINCT tweets.tweet) as count1, count(DISTINCT retweets.tweetid) as count2 from tweets, retweets where tweets.userid=" + req.session.userid + " and retweets.retweeterid="+ req.session.userid + " group by tweets.userid, retweets.retweeterid) as t";
 
-	mysql.fetchData(function(err,results) {
-			if(err) {
-				console.log("ERROR!");
-				throw err;
-			}
-			else {
-				if(results. length > 0) {
-					console.log("count of tweets::");
-					console.log(results.countoftweets);
-					json_responses = {
-						"statusCode" : 200,
-						"results" : results
-					}
-					console.log(json_responses)
-					res.send(json_responses);
-				}
-				else {
-					console.log("tweet count::0");
-					json_responses = {
-						"statusCode" : 401
-					}
-					console.log(json_responses);
-					res.send(json_responses);
-				}
-			}
-	}, getTweetCountQuery);
-
-}
-
-function getfollowingcount(req, res) {
-	console.log("in home.getfollowingcount node");
-	var getFollowingCountQuery = "select count(followingid) as countoffollowing from follow where followerid=" + req.session.userid;
-
-	mysql.fetchData(function(err,results) {
-			if(err) {
-				console.log("ERROR!");
-				throw err;
-			}
-			else {
-				if(results. length > 0) {
-					console.log("count of following::");
-					console.log(results.countoffollowing);
-					json_responses = {
-						"statusCode" : 200,
-						"results" : results
-					}
-					console.log(json_responses)
-					res.send(json_responses);
-				}
-				else {
-					console.log("following count::0");
-					json_responses = {
-						"statusCode" : 401
-					}
-					console.log(json_responses);
-					res.send(json_responses);
-				}
-			}
-	}, getFollowingCountQuery);
-}
-
-function getfollowercount(req, res) {
-	console.log("in home.getfollowercount node");
-	var getFollowerCountQuery = "select count(followerid) as countoffollower from follow where followingid=" + req.session.userid;
-
-	mysql.fetchData(function(err,results) {
-			if(err) {
-				console.log("ERROR!");
-				throw err;
-			}
-			else {
-				if(results. length > 0) {
-					console.log("count of follower::");
-					console.log(results.countoffollower);
-					json_responses = {
-						"statusCode" : 200,
-						"results" : results
-					}
-					console.log(json_responses)
-					res.send(json_responses);
-				}
-				else {
-					console.log("follower count::0");
-					json_responses = {
-						"statusCode" : 401
-					}
-					console.log(json_responses);
-					res.send(json_responses);
-				}
-			}
-	}, getFollowerCountQuery);
-}
 
 function error(req, res) {
 	ejs.renderFile('./views/errorpage.ejs',function(err, result) {
@@ -467,8 +406,5 @@ function error(req, res) {
 }
 
 exports.aftersignup=aftersignup;
-exports.gettweetcount = gettweetcount;
-exports.getfollowingcount = getfollowingcount;
-exports.getfollowercount = getfollowercount;
 exports.error = error;
 //exports.failsignUp=failsignup;

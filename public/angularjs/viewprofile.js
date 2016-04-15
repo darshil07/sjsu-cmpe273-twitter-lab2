@@ -67,7 +67,46 @@ viewprofile.controller('viewprofile', function($scope, $http, $route, $location,
 		console.log("in get User tweets success");
 		console.log(data);
 		if(data.statusCode==200) {
+
 			//setting the user tweets data
+			$scope.tweets = data.userTweets.tweet.reverse();
+			console.log("Tweets :: " + $scope.tweets);
+			console.log("User Tweets :: " + data.userTweets);
+
+			var i=0;
+			for(temp in data.userTweets.tweet) {
+				
+				console.log("temp :: " + i + "  :: " + temp);
+				console.log("tweet :: " + data.userTweets.tweet[temp].tweetstring);
+				var tagslistarr = data.userTweets.tweet[temp].tweetstring.match(/#\S+/g);
+				console.log("tagslistarr :: " + tagslistarr);
+				for(tag in tagslistarr) {
+				//	//$scope.tweet[temp] = $scope.tweet[temp].replace(tagslistarr[tag],"<a href='/searchHash?hashtag='" + tagslistarr[tag] + "''>" + tagslistarr[tag] + "</a>");
+					$scope.tweets[temp].tweetstring = $scope.tweets[temp].tweetstring.replace(tagslistarr[tag],"<a href = '/hashtag?keywor=" + tagslistarr[tag].substr(1) + "'>" + tagslistarr[tag] + "</a>");
+					console.log("After Replacing tweet :: " + $scope.tweets[temp].tweetstring);
+				//	console.log($scope.tweet);
+				}
+				i++;
+			}
+
+			//var index=0;
+
+			/*isretweet
+			ownerid
+			retweetcount
+			tweetdate
+			tweetstring*/
+
+
+			/*angular.forEach(data.userTweets, function(value, key) {
+				console.log(value);
+			});*/
+
+			/*var date = data.data.birthdate;
+				birthdate = birthdate.split("T");*/
+
+
+			/*//setting the user tweets data
 			$scope.tweet = new Array();
 			$scope.date_formatted = new Array();
 			$scope.time = new Array();
@@ -102,11 +141,11 @@ viewprofile.controller('viewprofile', function($scope, $http, $route, $location,
 					$scope.tweet[temp] = $scope.tweet[temp].replace(tagslistarr[tag],"<button type= \"submit\" class=\"btn btn-link\" ng-click=\"searchHash(\'"+ tagslistarr[tag] + "\');\">" + tagslistarr[tag] + "</button>");
 					console.log($scope.tweet);
 				}
-			}
+			}*/
 		}
 		else if(data.statusCode==401) {
 			console.log("ERROR :: statusCode=401");
-			$scope.tweet = data.tweet;
+			$scope.tweets = data.userTweets;
 		}
 
 	}).error(function(error) {
@@ -144,6 +183,7 @@ viewprofile.controller('viewprofile', function($scope, $http, $route, $location,
 				}
 			}).error(function(error) {
 				console.log("in error of tweet");
+				window.alert("ERROR! Tweet can not be posted! Please try again");
 			})
 		};
 

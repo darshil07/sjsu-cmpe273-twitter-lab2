@@ -4,34 +4,35 @@ var userResultsSearch = angular.module('userResultsSearch',['ngRoute']);
 
 userResultsSearch.controller('userResultsSearch', function($scope, $http, $route) {
 
-	/*$scope.userid = window.useridScript;*/
+	/*$scope.userid = window.useridScript;
+	$scope.username = window.usernameScript;
 	console.log("scope.userid :: " + $scope.userid);
-	console.log(window.useridScript);
-	console.log(window.searchUsername);
+	console.log("scope.username :: " + $scope.username);
+	console.log("window.userid :: " + window.useridScript);
+	console.log("window.searchUsername :: " + window.searchUsername);*/
+	//console.log(window.json_responses);
 
 	$http({
 		method : 'GET',
-		url : "/searchUser",
-		data : {
-			searchUsername : window.searchUsername
-		}
+		url : "/searchUser"
 	}).success(function(data) {
 		console.log("in searchUser success");
-		console.log(data.results);
+		console.log(data.searchresult);
 		console.log(data.statusCode);
 		console.log(data);
 
 		if(data.statusCode == 401) {
 			console.log("searchUser--statusCode == 401");
-			$scope.isSearchResults=0;
 		}
 		else if(data.statusCode == 200) {
 			console.log("searchUser--statusCode == 200");
-			$scope.isSearchResults=2;
 
 			//setting the search results' data
-			$scope.userid = data.iduser;
-
+			$scope.userid = data.userid;
+			$scope.username = data.username;
+			$scope.searchresult = data.searchresult;
+			$scope.searchUsername = data.searchUsername;
+			/*
 			$scope.name = new Array();
 			$scope.searchusername = new Array();
 			$scope.searchuserid= new Array();
@@ -60,7 +61,7 @@ userResultsSearch.controller('userResultsSearch', function($scope, $http, $route
 			console.log($scope.isFollowing);
 			console.log("userid:: " + $scope.userid);
 
-			getFollowing();
+			getFollowing();*/
 		}
 	}).error(function(error) {
 		console.log("in searchUser error");
@@ -156,6 +157,7 @@ userResultsSearch.controller('userResultsSearch', function($scope, $http, $route
 				}
 			}).error(function(error) {
 				console.log("in error of tweet");
+				window.alert("ERROR! Tweet can not be posted! Please try again");
 			})
 	};
 

@@ -168,23 +168,24 @@
 				<h3 style="text-align:center">{{name}}'s Tweets</h3>
 				<hr>
 				<!-- If User has tweets -->
-				<div ng-if="tweet.length>0">
-					<div ng-repeat="tempTweet in tweet track by $index">
+				<div ng-if="tweets.length>0">
+					<div ng-repeat="tempTweet in tweets">
 						<div>
-							<div ng-if="userid!=tweeterid[$index]"> <!-- checking if retweeted-->
+
+							<div ng-if="username!=tempTweet.ownername"> <!-- checking if retweeted-->
 								<h4>You Retweeted</h4>
 							</div>
 
-							<h4><label ng-bind-html="toTrustedHTML(tweet[$index])">{{tweet[$index]}}</label></h4>
-							<label>{{date_formatted[$index]}}</label>
-							<label>{{time[$index]}}</label>
+							<label>{{tempTweet.ownername}}</label>
+							<h4><label ng-bind-html="toTrustedHTML(tempTweet.tweetstring)"></label></h4>
+							<label>{{tempTweet.tweetdate | date : 'medium'}}</label>
 							<hr>
 						</div>
 					</div>
 				</div>
 
 				<!-- If User has no tweets -->
-				<div ng-if="tweet == 0">
+				<div ng-if="tweets == 0">
 					<h4>You currently have no tweets</h4>
 				</div>
 			</div>

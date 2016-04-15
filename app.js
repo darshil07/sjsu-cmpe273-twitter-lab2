@@ -16,6 +16,8 @@ var mongoStore = require("connect-mongo")(expressSession);
 //var mongo = require("./routes/mongo");
 var home = require('./routes/home');
 var profile = require('./routes/profile');
+var tweet = require('./routes/tweet');
+var search = require('./routes/search');
 
 var app = express();
 
@@ -55,6 +57,19 @@ app.post('/getprofiledetails',profile.getprofiledetails);
 app.get('/logout', home.logout);
 app.get('/signup',home.signup);
 app.post('/dosignup', home.dosignup);
+app.post('/doTweet',tweet.doTweet);
+app.post('/getUserTweetsDetails',profile.getUserTweetsDetails);
+//Get Tweet, Follower, Following Count
+app.post('/gettweetfollowerfollowingcount', home.gettweetfollowerfollowingcount);
+//User Search
+app.get('/userSearchResults', search.userSearchResults);
+app.get('/usrSearchResults', search.usrSearchResults);
+app.get('/searchUser',search.searchUser);
+
+
+//app.post('/gettweetcount', home.gettweetcount);
+
+
 //app.post('/checksignup',home.checksignup);
 //app.get('/', routes.index);
 //app.get('/users', user.list);
