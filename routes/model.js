@@ -127,3 +127,9 @@ usersSchema.plugin(autoIncrement.plugin, {model : 'Users', field : 'tweet.tweeti
 
 //Availability to the entire application
 module.exports = Users;
+
+/*var temp = 100;
+Users.resetCount(function(err, temp) {
+	if(err) console.log("Error :: " + err);
+	else	console.log("temp :: " + temp);
+});*/

@@ -82,7 +82,7 @@ viewprofile.controller('viewprofile', function($scope, $http, $route, $location,
 				console.log("tagslistarr :: " + tagslistarr);
 				for(tag in tagslistarr) {
 				//	//$scope.tweet[temp] = $scope.tweet[temp].replace(tagslistarr[tag],"<a href='/searchHash?hashtag='" + tagslistarr[tag] + "''>" + tagslistarr[tag] + "</a>");
-					$scope.tweets[temp].tweetstring = $scope.tweets[temp].tweetstring.replace(tagslistarr[tag],"<a href = '/hashtag?keywor=" + tagslistarr[tag].substr(1) + "'>" + tagslistarr[tag] + "</a>");
+					$scope.tweets[temp].tweetstring = $scope.tweets[temp].tweetstring.replace(tagslistarr[tag],"<a href = '/hashtag?keyword=" + tagslistarr[tag].substr(1) + "'>" + tagslistarr[tag] + "</a>");
 					console.log("After Replacing tweet :: " + $scope.tweets[temp].tweetstring);
 				//	console.log($scope.tweet);
 				}
@@ -200,9 +200,9 @@ viewprofile.controller('viewprofile', function($scope, $http, $route, $location,
 				console.log("searchString:" + searchStr);
 				
 				$http({
-				method : "POST",
+				method : "GET",
 				url : "/userSearchResults",
-				data : {
+				params : {
 					searchUsername : searchStr
 					}
 				}).success( function(data) {
@@ -215,7 +215,6 @@ viewprofile.controller('viewprofile', function($scope, $http, $route, $location,
 					else if(data.statusCode == 200) {
 						console.log("in statusCode=200");
 						window.location.assign("/usrSearchResults");
-						
 					}
 				}).error(function(error) {
 					console.log("in error of search");
@@ -228,7 +227,29 @@ viewprofile.controller('viewprofile', function($scope, $http, $route, $location,
 				if(searchStr.length>1){
 					console.log("in hashtag search");
 
+					var searchHash = searchStr.split("#")[1];
 
+					$http({
+						method : 'GET',
+						url : '/searchHashTag',
+						params : {
+							hashtag : searchHash
+						}
+					}).success(function(data) {
+						
+						console.log(data);
+						if(data.statusCode == 401) {
+							console.log("in statusCode=401");
+							window.alert("ERROR!");
+						}
+						else if(data.statusCode == 200) {
+							console.log("in statusCode=200");
+							window.location.assign("/srcHashTag");
+						}
+					}).error(function(error) {
+						console.log("in error hashtag search");
+						console.log(error);
+					});
 					//window.location.assign("/hashtagSearchResults/?hashtag=" + searchString);
 				}
 			}

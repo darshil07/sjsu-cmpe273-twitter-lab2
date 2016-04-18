@@ -132,32 +132,32 @@
 		<div ng-model = "userid" style="visibility : hidden;"></div>
 		<div class="followerList">
 			<h2 style="align:center;">Followers list</h2>
-			<div ng-show="isFollowerList>0">
-				<div ng-repeat="tempUser in followerusername">	
+			<div ng-show="follower!=0">
+				<div ng-repeat="tempfollower in follower">	
+					<div></div>
 					<div class="row">
+						
 						<div class="col-md-3" align="right">
 							<img src="user-profile-image.jpg" height="70" width="70" style="margin-top:20px;"/>
 						</div>
 						<div class="col-md-5" align="left">
 							<div class="row">
-								<h3><label for="name" ng-model = "name">{{name[$index]}}</label></h3>
+								<h3><label for="name" ng-model = "name">{{tempfollower.firstname}} {{tempfollower.lastname}}</label></h3>
 							</div>
 							<div class="row">
-								<h4><label for="followerusername" ng-model = "followerusername">{{tempUser}}</label></h4>
+								<h4><label for="followerusername" ng-model = "followerusername">{{tempfollower.username}}</label></h4>
 							</div>
 						</div>
 						<div class="col-md-2">
 							<!-- If Following -->
 							<div ng-show="isFollowing[$index]">
 								<button type="submit" class="btn btn-primary" style="height:35px; margin-left:89px;"
-			    				ng-model="buttonUnfollow" ng-click="follow(followeruserid[$index]);">Unfollow</button>
+			    				ng-model="buttonUnfollow" ng-click="follow(tempfollower.username, true);">Unfollow</button>
 							</div>
 							<!-- If not Following -->
 							<div ng-show="!isFollowing[$index]">
-								<div ng-show="followeruserid[$index]!=userid">
-									<button type="submit" class="btn btn-info" style="height:35px; margin-left:89px;"
-			    					ng-model="buttonFollow" ng-click="follow(followeruserid[$index]);">Follow</button>
-								</div>
+								<button type="submit" class="btn btn-info" style="height:35px; margin-left:89px;"
+			    				ng-model="buttonFollow" ng-click="follow(tempfollower.username, false);">Follow</button>
 							</div>
 
 
@@ -168,7 +168,7 @@
 					</div>
 				</div>
 			</div>
-			<div ng-show="isFollowerList<1">
+			<div ng-show="follower==0">
 				<h3>You don't have a follower</h3>
 			</div>
 			<div ng-model="isFollowerList" style="visibility: hidden" ng-init="isFollowerList=0"></div>

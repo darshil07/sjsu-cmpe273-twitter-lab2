@@ -1,5 +1,8 @@
 var ejs = require("ejs");
 var mysql = require('./mysql');
+var mongo = require("./mongo");
+var mongoURL = "mongodb://localhost:27017/test";
+var Users = require('./model');
 
 exports.getfollowingid = function(req, res) {
 	console.log("in getfollowerid node");
@@ -41,7 +44,70 @@ exports.getfollowingid = function(req, res) {
 exports.deletefollowing = function(req, res) {
 	console.log("in delete Following node");
 
-	var deletefollowingid = req.param("deletefollowingid");
+
+	var deletefollowingusername = req.param("deletefollowingusername");
+	console.log("deletefollowingusername :: " + deletefollowingusername);
+
+	//Users.update({email : req.session.email}, {$pull : {following : [deletefollowingusername]}});
+
+	Users.findOne({email : req.session.email}, function(err, data) {
+		if(err) {
+			console.log("Error :: " + err);
+			json_responses = {"statusCode" : 401};
+			res.send(json_responses);
+		} else {
+			console.log("data is :: " + data);
+			if(data) {
+
+				var tempObject = new Object();
+				tempObject = deletefollowingusername;
+				data.following.pull(tempObject);
+
+				data.save(function(err, result) {
+					if(err) {
+						console.log("Error in pushing Follwing username :: " + err);
+						json_responses = {"statusCode" : 401};
+						res.send(json_responses);		
+					} else {
+						console.log("Following username successfully pulled :: " + result);
+						
+						Users.findOne({username : deletefollowingusername}, function(err, followerdelete) {
+							if(err) {
+								console.log("Error in finding follower details ::" + err);
+								json_responses = {"statusCode" : 401};
+								res.send(json_responses);
+							} else {
+								console.log("follower details successfully found :: " + followerdelete);
+
+								tempObject = req.session.username;
+								console.log("Temp Object for deleting follower username:: " + tempObject);
+								followerdelete.follower.pull(tempObject);
+
+								followerdelete.save(function(err, resultfollowerpull) {
+									if(err) {
+											console.log("Error in pulling Follower username :: " + err);
+											json_responses = {"statusCode" : 401};
+											res.send(json_responses);
+										} else {
+											if(resultfollowerpull) {
+												console.log("Follower username successfully pulled :: " + resultfollowerpull);
+												json_responses= {"statusCode" : 200};
+												res.send(json_responses);
+											}
+										}
+								});
+
+							}
+						});
+						/*json_responses= {"statusCode" : 200};
+						res.send(json_responses);*/
+					}
+				})
+			}
+		}
+	});
+
+	/*var deletefollowingid = req.param("deletefollowingid");
 	console.log(deletefollowingid);
 
 	var deletefollowingquery = "delete from follow where followingid=" + deletefollowingid + " and followerid=" + req.session.userid;
@@ -71,16 +137,68 @@ exports.deletefollowing = function(req, res) {
 			}
 		}
 	});
-
+*/
 }
 
 exports.insertfollowing = function(req, res) {
 	console.log("in insert Following node");
 
-	var insertfollowingid = req.param("insertfollowingid");
-	console.log(insertfollowingid);
+	var insertfollowingusername = req.param("insertfollowingusername");
+	console.log("insertfollowingusername :: " + insertfollowingusername);
 
-	var insertfollowingquery = "insert into follow (followerid, followingid) values(" + req.session.userid + "," + insertfollowingid + ")";
+	Users.findOne({email : req.session.email}, function(err, data) {
+		if(err) {
+			console.log("Error :: " + err);
+			json_responses = {"statusCode" : 401};
+			res.send(json_responses);
+		} else {
+			console.log("data is :: " + data);
+			if(data) {
+
+				var tempObject = new Object();
+				tempObject = insertfollowingusername;
+
+				data.following.push(tempObject);
+				data.save(function(err, result) {
+					if(err) {
+						console.log("Error in pushing Follwing username :: " + err);
+						json_responses = {"statusCode" : 401};
+						res.send(json_responses);		
+					} else {
+						console.log("Following username successfully pushed :: " + result);
+						Users.findOne({username : insertfollowingusername}, function(err, followerinsert) {
+							if(err) {
+								console.log("Error in finding Follwer details :: " + err);
+								json_responses = {"statusCode" : 401};
+								res.send(json_responses);
+							} else {
+								if(followerinsert) {
+									console.log("follower details successfully found :: " + followerinsert);
+									tempObject = req.session.username;
+									console.log("Temp Object for inserting follower username:: " + tempObject);
+									followerinsert.follower.push(tempObject);
+									followerinsert.save(function(err, resultfollowerpush) {
+										if(err) {
+											console.log("Error in pushing Follower username :: " + err);
+											json_responses = {"statusCode" : 401};
+											res.send(json_responses);
+										} else {
+											if(resultfollowerpush) {
+												console.log("Follower username successfully pushed :: " + resultfollowerpush);
+												json_responses= {"statusCode" : 200};
+												res.send(json_responses);
+											}
+										}
+									});
+								}
+							}
+						});
+					}
+				})
+			}
+		}
+	});
+	/*var insertfollowingquery = "insert into follow (followerid, followingid) values(" + req.session.userid + "," + insertfollowingid + ")";
 
 	mysql.storeData(insertfollowingquery, function(err, result){
 		//render on success
@@ -95,7 +213,7 @@ exports.insertfollowing = function(req, res) {
 			console.log('ERROR! Insertion not done');
 			throw err;
 		}
-	});
+	});*/
 
 }
 
@@ -113,7 +231,40 @@ exports.viewfollowers = function(req, res) {
 
 exports.getfollowing = function(req, res) {
 	console.log("in getfollowing node");
-	var userid = req.session.userid;
+	
+	var email = req.session.email;
+	console.log("email :: " + email);
+
+
+	Users.findOne({email : email}, function(err, data){
+		if(err) {
+			console.log("ERROR :: " + err);
+			json_responses = {"statusCode" : 401};
+			res.send(json_responses);
+		} else {
+			if(data) {
+				if(data.following.length>0){
+					Users.find({username : {$in : data.following}}, function(err, followingdetails) {
+						if(err) {
+							console.log("Error :: " + err);
+							json_responses = {"statusCode" : 401};
+							res.send(json_responses);		
+						} else {
+							console.log("Following details :: " + followingdetails);
+							json_responses = {"statusCode" : 200, following : followingdetails};
+							res.send(json_responses);
+						}
+					});
+				} else {
+					json_responses = {"statusCode" : 200, following : 0};
+					res.send(json_responses);
+				}
+				
+			}
+		}
+	});
+
+	/*var userid = req.session.userid;
 	var getFollowingIdQuery = "select followingid from follow where followerid=" + userid;
 	var getFollowingDetailsQuery = "select userid, username, firstname, lastname from users where userid in (" + getFollowingIdQuery + ") order by firstname";
 
@@ -145,12 +296,44 @@ exports.getfollowing = function(req, res) {
 					res.send(json_responses);
 				}
 			}
-	},getFollowingDetailsQuery);
+	},getFollowingDetailsQuery);*/
 }
 
 exports.getfollower = function(req, res) {
 	console.log("in getfollower node");
-	var userid = req.session.userid;
+	
+	var email = req.session.email;
+	console.log("email :: " + email);
+
+
+	Users.findOne({email : email}, function(err, data){
+		if(err) {
+			console.log("ERROR :: " + err);
+			json_responses = {"statusCode" : 401};
+			res.send(json_responses);
+		} else {
+			if(data) {
+				if(data.follower.length>0){
+					Users.find({username : {$in : data.follower}}, function(err, followerdetails) {
+						if(err) {
+							console.log("Error :: " + err);
+							json_responses = {"statusCode" : 401};
+							res.send(json_responses);		
+						} else {
+							console.log("Follower details :: " + followerdetails);
+							json_responses = {"statusCode" : 200, follower : followerdetails, following : data.following};
+							res.send(json_responses);
+						}
+					});
+				} else {
+					json_responses = {"statusCode" : 200, follower : 0};
+					res.send(json_responses);
+				}
+			}
+		}
+	});
+
+	/*var userid = req.session.userid;
 	var getFollowerIdQuery = "select followerid from follow where followingid=" + userid;
 	var getFollowerDetailsQuery = "select userid, username, firstname, lastname from users where userid in (" + getFollowerIdQuery + ") order by firstname";
 
@@ -182,13 +365,42 @@ exports.getfollower = function(req, res) {
 					res.send(json_responses);
 				}
 			}
-	},getFollowerDetailsQuery);
+	},getFollowerDetailsQuery);*/
 }
 
 exports.getfollowingtweets = function(req, res) {
 	console.log("in getfollowingtweets node");
 
-	var userid = req.session.userid;
+	Users.findOne({email : req.session.email}, function(err, data) {
+		if(err) {
+			console.log("Error :: " + err);
+			json_responses = {"statusCode" : 401};
+			res.send(json_responses);
+		} else {
+			if(data) {
+				Users.find({username : {$in : data.following}}, function(err, followingdetails) {
+					if(err) {
+						console.log("Error of followingdetails:: " + err);
+						json_responses = {"statusCode" : 401};
+						res.send(json_responses);
+					} else {
+						console.log("Following details in getfollowingtweets :: " + followingdetails);
+						
+						if(followingdetails.length > 0)
+						{
+							json_responses = {"statusCode" : 200, currentuserdetails : data, followingdetails : followingdetails};
+							res.send(json_responses);
+						} else {
+							json_responses = {"statusCode" : 200, followingdetails : 0};
+							res.send(json_responses);
+						}
+					}
+				});
+			}
+		}
+	});	
+
+	/*var userid = req.session.userid;
 	var getFollowingIdQuery = "select followingid from follow where followerid=" + userid;
 	//var getFollowingTweetsQuery = "select tweet,DATE_FORMAT(date,'%d/%m/%Y') as date_formatted,time from tweets where userid in ("+ getFollowingIdQuery + ") order by date DESC, time DESC";
 	var getFollowingTweetsQuery = "select users.username,tweets.tweetid,tweet,DATE_FORMAT(date,'%d/%m/%Y') as date_formatted,time from tweets,users where tweets.userid in (" + getFollowingIdQuery + ")  and users.userid= tweets.userid order by date DESC, time DESC";
@@ -221,5 +433,5 @@ exports.getfollowingtweets = function(req, res) {
 				res.send(json_responses);
 			}
 		}
-	},getFollowingTweetsQuery);
+	},getFollowingTweetsQuery);*/
 }

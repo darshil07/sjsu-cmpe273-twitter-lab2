@@ -8,12 +8,43 @@ viewfollower.controller('viewfollower', function($scope, $http, $route) {
 		method : 'POST',
 		url : '/getfollower'
 	}).success(function(data) {
-		console.log("in getfollower success");
-		console.log(data.results);
+
+		console.log("in getfollowing success");
+		//console.log(data.results);
 		console.log(data.statusCode);
-		console.log(data);
+		console.log(data.follower);
 
 		if(data.statusCode == 401) {
+			console.log("followerUser--statusCode == 401");
+			//$scope.isFollowingList=0;
+			
+		}
+		else if(data.statusCode == 200) {
+			console.log("followerUser--statusCode == 200");
+			
+			$scope.follower = data.follower;
+			$scope.currentuserfollowing = data.following;
+			$scope.isFollowing = new Array();
+
+			//console.log("follower :: " + $scope.follower.username);
+			console.log("following :: " + $scope.currentuserfollowing)
+			if($scope.follower!=0){
+				var index = 0;
+				for(tempfollower in $scope.follower){
+					//console.log("searchresult.username :: " + $scope.searchresult[tempsearch].username);
+					$scope.isFollowing[index] = false;
+					for(tempfollwing in $scope.currentuserfollowing){
+						//console.log("currentuserfollowing :: " + $scope.currentuserfollowing[tempfollwing]);
+						if($scope.follower[tempfollower].username == $scope.currentuserfollowing[tempfollwing]){
+							$scope.isFollowing[index] = true;
+						}
+					}
+					console.log("i :: " + index + " - isFollowing :: " + $scope.isFollowing[index]);
+					index++;
+				}
+			}
+
+		/*if(data.statusCode == 401) {
 			console.log("followerUser--statusCode == 401");
 			$scope.isFollowerList=0;
 			
@@ -53,7 +84,7 @@ viewfollower.controller('viewfollower', function($scope, $http, $route) {
 			console.log($scope.isFollowing);
 			console.log("userid:: " + $scope.userid);
 
-			getFollowing();
+			getFollowing();*/
 		}
 	}).error(function(error) {
 		console.log("in error get follower");
@@ -62,7 +93,7 @@ viewfollower.controller('viewfollower', function($scope, $http, $route) {
 
 
 
-	//getFollowing
+	/*//getFollowing
 	var getFollowing = function() {
 		$http({
 			method : 'POST',
@@ -114,10 +145,69 @@ viewfollower.controller('viewfollower', function($scope, $http, $route) {
 			console.log("in error get followeruserid");
 			console.log(error);
 		});
-	}
+	}*/
 
-	$scope.follow = function(clickedFollowingId) {
-		console.log("in follow angular");
+	$scope.follow = function(clickedFollowingUsername, isFollowing) {
+		
+		console.log("in follow function");
+		
+		console.log("clickedFollowingUsername :: " + clickedFollowingUsername);
+		console.log("isFollowing :: " + isFollowing);
+		if(isFollowing){
+			$http({
+				method : 'POST',
+				url : '/deletefollowing',
+				data : {
+					deletefollowingusername : clickedFollowingUsername
+				}
+			}).success(function(data){
+					console.log("in success of delete following user");
+					console.log(data);
+					if(data.statusCode == 401) {
+						console.log("in statusCode=401");
+						window.alert("ERROR!");
+					}
+					else if(data.statusCode == 200) {
+						console.log("in statusCode=200");
+						var loc = window.location.toString();
+						console.log(loc);
+						var locationString = loc.split("localhost:3000");
+					   	console.log(locationString[1]);
+					   	window.location.assign(locationString[1]);	
+					}
+			}).error(function(error){
+				console.log("in error of delete following user");
+			});
+		} else {
+			$http({
+				method : 'POST',
+				url : '/insertfollowing',
+				data : {
+					insertfollowingusername : clickedFollowingUsername
+				}
+			}).success(function(data){
+					console.log("in success of insert following user");
+					console.log(data);
+					if(data.statusCode == 401) {
+						console.log("in statusCode=401");
+						window.alert("ERROR!");
+					}
+					else if(data.statusCode == 200) {
+						console.log("in statusCode=200");	
+						var loc = window.location.toString();
+						console.log(loc);
+						var locationString = loc.split("localhost:3000");
+					   	console.log(locationString[1]);
+					   	window.location.assign(locationString[1]);	
+					}
+			}).error(function(error){
+				console.log("in error of insert following user");
+			});
+		}
+
+
+
+		/*console.log("in follow angular");
 		console.log("clickedFollowingId:" + clickedFollowingId);
 		var isUnfollowed = false;
 
@@ -182,7 +272,7 @@ viewfollower.controller('viewfollower', function($scope, $http, $route) {
 			}).error(function(error){
 				console.log("in error of insert following user");
 			});
-		}
+		}*/
 	}
 
 	$scope.search = function() {
@@ -198,9 +288,9 @@ viewfollower.controller('viewfollower', function($scope, $http, $route) {
 				console.log("searchString:" + searchStr);
 				
 				$http({
-					method : "POST",
+					method : "GET",
 					url : "/userSearchResults",
-					data : {
+					params : {
 						searchUsername : searchStr
 					}
 				}).success( function(data) {
@@ -213,7 +303,6 @@ viewfollower.controller('viewfollower', function($scope, $http, $route) {
 					else if(data.statusCode == 200) {
 						console.log("in statusCode=200");
 						window.location.assign("/usrSearchResults");
-						
 					}
 				}).error(function(error) {
 					console.log("in error of search");

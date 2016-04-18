@@ -15,12 +15,15 @@ viewfollowing.controller('viewfollowing', function($scope, $http, $route) {
 
 		if(data.statusCode == 401) {
 			console.log("followingUser--statusCode == 401");
-			$scope.isFollowingList=0;
+			//$scope.isFollowingList=0;
 			
 		}
 		else if(data.statusCode == 200) {
 			console.log("followingUser--statusCode == 200");
-			$scope.isFollowingList=2;
+			
+			$scope.following = data.following;
+
+			/*$scope.isFollowingList=2;
 
 			//setting the search results' data
 			$scope.userid = data.iduser;
@@ -50,7 +53,7 @@ viewfollowing.controller('viewfollowing', function($scope, $http, $route) {
 			console.log($scope.followingusername);
 			console.log($scope.followinguserid);
 			
-			console.log("userid:: " + $scope.userid);
+			console.log("userid:: " + $scope.userid);*/
 		}
 
 		
@@ -59,18 +62,18 @@ viewfollowing.controller('viewfollowing', function($scope, $http, $route) {
 		console.log(error);
 	});
 
-	$scope.unfollow = function(clickedFollowingId) {
+	$scope.unfollow = function(clickedFollowingUsername) {
 		console.log("in unfollow angular");
-		console.log("clickedFollowingId:" + clickedFollowingId);
+		console.log("clickedFollowingUsername:" + clickedFollowingUsername);
 
-		if(clickedFollowingId!=null || clickedFollowingId!='') {
+		if(clickedFollowingUsername!=null || clickedFollowingUsername!='') {
 			
 			//delete following
 			$http({
 				method : 'POST',
 				url : '/deletefollowing',
 				data : {
-					deletefollowingid : clickedFollowingId
+					deletefollowingusername : clickedFollowingUsername
 				}
 			}).success(function(data){
 				console.log("in success of delete following users");
@@ -107,9 +110,9 @@ viewfollowing.controller('viewfollowing', function($scope, $http, $route) {
 				console.log("searchString:" + searchStr);
 				
 				$http({
-					method : "POST",
+					method : "GET",
 					url : "/userSearchResults",
-					data : {
+					params : {
 						searchUsername : searchStr
 					}
 				}).success( function(data) {

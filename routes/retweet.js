@@ -1,5 +1,8 @@
 var ejs = require("ejs");
 var mysql = require('./mysql');
+var mongo = require("./mongo");
+var mongoURL = "mongodb://localhost:27017/test";
+var Users = require('./model');
 
 exports.getretweetdetails = function(req, res) {
 	console.log("in getretweetdetails node");
@@ -39,24 +42,82 @@ exports.getretweetdetails = function(req, res) {
 exports.insertretweet = function(req,res) {
 	console.log("in insertretweet node");
 
-	var insertretweetid = req.param("insertretweetid");
-	console.log(insertretweetid);
+	var followingusername = req.param("followingusername");
+	var tweetid = req.param("tweetid");
+	var tweetstring = req.param("tweetstring");
+	var tweetdate = req.param("tweetdate");
 
-	var getOwnerId = "select userid from tweets where tweetid=" + insertretweetid;
-	var insertfollowingquery = "insert into retweets (tweetid, ownerid, retweeterid, date, time) values(" + insertretweetid + ", ("+ getOwnerId + "), " + req.session.userid + ",CURDATE(), CURTIME())";
+	console.log("followingusername :: " + followingusername);
+	console.log("tweetid :: " + tweetid);
+	console.log("tweetstring :: " + tweetstring);
 
-	mysql.storeData(insertfollowingquery, function(err, result){
-		//render on success
-		if(!err){
-			console.log('New Following user successfully added!');
-				json_responses = {
-					"statusCode" : 200
+	//Users.findOne({tweet._id : tweetid}, function(err, data) {
+	Users.findOne({username : followingusername}, function(err, data) {
+		if(err) {
+			console.log("ERROR :: " + err);
+			json_responses = {"statusCode" : 401};
+			res.send(json_responses);
+		} else {
+			console.log("data is :: " + data);
+			if(data) {
+
+				//updateing the retweetcount of a particular tweet by finding that tweet from tweet array
+				for(var index = 0; index < data.tweet.length; index++) {
+					if(data.tweet[index]._id == tweetid) {
+						console.log("Before :: retweetcount :: " + data.tweet[index].retweetcount);
+						var retweetcount = (data.tweet[index].retweetcount) + 1;
+						var query = {'tweet._id' : tweetid};
+
+						console.log("After :: retweetcount :: " + retweetcount);
+						Users.update(query, {'$set' : {'tweet.$.retweetcount' : retweetcount}},	
+							function(err, result) {
+								if(err) {
+									console.log("ERROR :: " + err);
+									json_responses = {"statusCode" : 401};
+									res.send(json_responses);
+								} else {
+									console.log("result is :: " + result);
+									if(result) {
+										Users.findOne({email : req.session.email}, function(err, currentuserdetails) {
+											if(err) {
+												console.log("ERROR :: " + err);
+												json_responses = {"statusCode" : 401};
+												res.send(json_responses);
+											} else {
+												console.log("currentuserdetails.username : " + currentuserdetails.username);
+												if(currentuserdetails) {
+													tempObject = new Object();
+
+													tempObject["tweetstring"] = tweetstring;
+													tempObject["hashtag"] = tweetstring.match(/#\w+/g);
+													tempObject["originaltweetid"] = tweetid;
+													tempObject["ownername"] = data.username;
+													tempObject["ownerfirstname"] = data.firstname;
+													tempObject["ownerlastname"] = data.lastname;
+													tempObject["originaltweetdate"] = tweetdate;
+
+													currentuserdetails.tweet.push(tempObject);
+													currentuserdetails.save(function(err, resultretweetcountpush) {
+														if(err) {
+															console.log(err);
+														} else {
+															console.log("success :: " + resultretweetcountpush);
+															if(resultretweetcountpush) {
+																json_responses= {"statusCode" : 200};
+																res.send(json_responses);
+															}
+														}
+													});
+												}
+											}
+										});
+									}
+								}
+							}
+						);
+					}
 				}
-				res.send(json_responses);
-		}
-		else{
-			console.log('ERROR! Insertion not done');
-			throw err;
+			}
 		}
 	});
 }
@@ -64,33 +125,81 @@ exports.insertretweet = function(req,res) {
 exports.deleteretweet = function(req, res) {
 	console.log("in deleteretweet node");
 
-	var deleteretweetid = req.param("deleteretweetid");
-	console.log(deleteretweetid);
+	var followingusername = req.param("followingusername");
+	var tweetid = req.param("tweetid");
+	var tweetstring = req.param("tweetstring");
+	var tweetdate = req.param("tweetdate");
 
-	var deleteretweetquery = "delete from retweets where tweetid=" + deleteretweetid + " and retweeterid=" + req.session.userid;
+	console.log("followingusername :: " + followingusername);
+	console.log("tweetid :: " + tweetid);
+	console.log("tweetstring :: " + tweetstring);
 
-	mysql.deleteData(deleteretweetquery, function(err,results) {
+	//Users.findOne({tweet._id : tweetid}, function(err, data) {
+	Users.findOne({username : followingusername}, function(err, data) {
 		if(err) {
-				console.log("Error in deleteData");
-				console.log(err);
-				throw err;
-			}
-		else {
-			console.log("successfully Un-did retweet");
-			console.log(results);
-			console.log(results.affectedRows);
-			if(results.affectedRows >0) {
-				json_responses = {
-					"statusCode" : 200,
-					"results" : results
+			console.log("ERROR :: " + err);
+			json_responses = {"statusCode" : 401};
+			res.send(json_responses);
+		} else {
+			console.log("data is :: " + data);
+			if(data) {
+				//updating the retweetcount of a particular tweet by finding that tweet from tweet array
+				for(var index = 0; index < data.tweet.length; index++) {
+					if(data.tweet[index]._id == tweetid) {
+						
+						console.log("Before :: retweetcount :: " + data.tweet[index].retweetcount);
+						var retweetcount = (data.tweet[index].retweetcount) - 1;
+						var query = {'tweet._id' : tweetid};
+						var tweetdateforcondition = data.tweet[index].tweetdate;
+
+
+						console.log("After :: retweetcount :: " + retweetcount);
+
+						Users.update(query, {'$set' : {'tweet.$.retweetcount' : retweetcount}},
+							function(err, result) {
+								if(err) {
+									console.log("ERROR :: " + err);
+									json_responses = {"statusCode" : 401};
+									res.send(json_responses);
+								} else {
+									console.log("result is :: " + result);
+
+									if(result) {
+										Users.findOne({email : req.session.email}, function(err, currentuserdetails) {
+											if(err) {
+												console.log("ERROR :: " + err);
+												json_responses = {"statusCode" : 401};
+												res.send(json_responses);
+											} else {
+												console.log("currentuserdetails.username : " + currentuserdetails.username);
+												if(currentuserdetails) {
+													//console.log("matched tweet :: " + data.tweet[index]);
+													//console.log("matched tweetdate :: " + data.tweet[index].tweetdate);
+													//var tweetdateforcondition = data.tweet[index].tweetdate;
+													console.log("tweetdate :: " + tweetdateforcondition);
+													Users.update({email : req.session.email}, 
+														{'$pull' : {'tweet' : {'ownername' : followingusername, 'originaltweetdate' : tweetdateforcondition}}},
+														function(err, resultretweetcurrentuser) {
+															if(err) {
+															console.log("ERROR :: " + err);
+															json_responses = {"statusCode" : 401};
+															res.send(json_responses);
+														} else {
+															console.log("resultretweetcurrentuser :: " + resultretweetcurrentuser);
+															json_responses= {"statusCode" : 200};
+															res.send(json_responses);
+														}
+														}
+													);
+												}
+											}
+										});
+									}
+								}
+							}
+						);
+					}
 				}
-				res.send(json_responses);
-			}
-			else{
-				json_responses = {
-					"statusCode" : 401
-				}
-				res.send(json_responses);
 			}
 		}
 	});

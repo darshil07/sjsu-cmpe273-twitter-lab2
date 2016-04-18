@@ -265,7 +265,7 @@ var doSignup = function(newUser, res) {
 		contact : newUser[0].contact,
 		location : newUser[0].location
 	});
-
+	
 	usernew.save(function(err, usernew) {
 		if(err) {
 			console.log("Error in Signing Up!!");
@@ -273,6 +273,10 @@ var doSignup = function(newUser, res) {
 			json_responses = {"statusCode" : 401};
 			res.send(json_responses);
 		} else {
+			/*usernew.resetCount(function(err, nextCount) {
+				if(err)	console.log("Error :: " + err);
+				else	console.log("Next Count :: " + nextCount);
+			});*/
 			console.log("Successfully Signed Up!!");
 			json_responses = {"statusCode" : 200};
 			res.send(json_responses);

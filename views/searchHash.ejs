@@ -136,20 +136,32 @@
 	<div class="container-fluid">
 		<div class="searchResults">
 			<h2>Search Results</h2>
-			<div ng-if="tweet.length>0">
-					<div ng-repeat="tempTweet in tweet track by $index">
-						<div>
-							<h3>{{username[$index]}}</h3>
-							<h4><label ng-bind-html="toTrustedHTML(tweet[$index])">{{tweet[$index]}}</label></h4>
-							<label>{{date_formatted[$index]}}</label>
-							<label>{{time[$index]}}</label>
-							<hr>
+			<div ng-if="results.length>0">
+					<div ng-repeat="tempuser in results">
+						<div ng-show="tempuser.isretweet">
+							<div>
+								<h3>{{tempuser.name}} Retweeted</h3>
+								<h4>Tweet by {{tempuser.ownerusername}}</h4>
+								<h4><label ng-bind-html="toTrustedHTML(tempuser.tweetstring)">{{tempuser.tweetstring}}</label></h4>
+								<label>{{tempuser.originaltweetdate | date : 'medium'}}</label>
+								<h4><label>Retweeted at {{tempuser.tweetdate | date : 'medium'}}</label></h4>
+								<hr>
+							</div>
+						</div>
+						<div ng-show="!tempuser.isretweet">
+							<div>
+								<h3>{{tempuser.name}}</h3>
+								<h4>{{tempuser.username}}</h4>
+								<h4><label ng-bind-html="toTrustedHTML(tempuser.tweetstring)">{{tempuser.tweetstring}}</label></h4>
+								<label>{{tempuser.tweetdate | date : 'medium'}}</label>
+								<hr>
+							</div>
 						</div>
 					</div>
 				</div>
 
-			<div ng-show="isTweets<1">
-				<h3>No Tweets not Found! Please try again!</h3>
+			<div ng-show="results==0">
+				<h3>No Tweets Found! Please try again!</h3>
 			</div>
 			<div ng-model="isSearchResults" style="visibility: hidden" ng-init="isSearchResults=0"></div>
 		</div>

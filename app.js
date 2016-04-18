@@ -18,7 +18,8 @@ var home = require('./routes/home');
 var profile = require('./routes/profile');
 var tweet = require('./routes/tweet');
 var search = require('./routes/search');
-
+var follower = require('./routes/follower');
+var retweet = require('./routes/retweet');
 var app = express();
 
 //all environments
@@ -65,10 +66,24 @@ app.post('/gettweetfollowerfollowingcount', home.gettweetfollowerfollowingcount)
 app.get('/userSearchResults', search.userSearchResults);
 app.get('/usrSearchResults', search.usrSearchResults);
 app.get('/searchUser',search.searchUser);
-
-
-//app.post('/gettweetcount', home.gettweetcount);
-
+//insert and delete follower
+app.post('/deletefollowing', follower.deletefollowing);
+app.post('/insertfollowing', follower.insertfollowing);
+//view follower, following pages
+app.get('/viewfollowing',follower.viewfollowing);
+app.get('/viewfollowers',follower.viewfollowers);
+//get following and followers list
+app.post('/getfollowing', follower.getfollowing);
+app.post('/getfollower', follower.getfollower);
+//get followers' tweets
+app.post('/getfollowingtweets', follower.getfollowingtweets);
+//delete and add retweet
+app.post('/deleteretweet',retweet.deleteretweet);
+app.post('/insertretweet', retweet.insertretweet);
+//hashtag search
+app.post("/searchHash", search.searchHash);
+app.get("/srcHashTag",search.srcHashTag);
+app.get("/searchHashTag", search.searchHashTag);
 
 //app.post('/checksignup',home.checksignup);
 //app.get('/', routes.index);

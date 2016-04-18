@@ -160,22 +160,23 @@
 						</div>
 						<div class="col-md-2">
 							<div ng-show="tempUser.username!=username">	
-								<div>
-									Following and Unfollowing
-								</div>
-								<!-- 
-								If Following 
+								
+								<!-- <div ng-repeat = "tempfollwing in currentuserfollowing"> -->
+									<!-- <div>
+										<button type="submit" class="btn btn-info" style="height:35px; margin-left:89px;"
+					    					ng-model="buttonFollow" ng-click="follow(tempUser.username, false);">Follow</button>	
+									</div> -->
+								<!-- <div> -->
+								<!-- If Following -->
 								<div ng-show="isFollowing[$index]">
 									<button type="submit" class="btn btn-primary" style="height:35px; margin-left:89px;"
-				    				ng-model="buttonUnfollow" ng-click="follow(searchuserid[$index]);">Unfollow</button>
+				    				ng-model="buttonUnfollow" ng-click="follow(tempUser.username, true);">Unfollow</button>
 								</div>
-								If not Following 
+								<!-- If not Following --> 
 								<div ng-show="!isFollowing[$index]">
-									<div ng-show="searchuserid[$index]!=userid">
-										<button type="submit" class="btn btn-info" style="height:35px; margin-left:89px;"
-				    					ng-model="buttonFollow" ng-click="follow(searchuserid[$index]);">Follow</button>
-									</div>
-								</div> -->
+									<button type="submit" class="btn btn-info" style="height:35px; margin-left:89px;"
+				    				ng-model="buttonFollow" ng-click="follow(tempUser.username, false);">Follow</button>
+								</div>
 							</div>
 						</div>
 						<div class="col-md-2">

@@ -32,6 +32,25 @@ userResultsSearch.controller('userResultsSearch', function($scope, $http, $route
 			$scope.username = data.username;
 			$scope.searchresult = data.searchresult;
 			$scope.searchUsername = data.searchUsername;
+			//setting current user's following list
+			$scope.currentuserfollowing = data.currentuserfollowing;
+			$scope.isFollowing = new Array();
+
+			if($scope.searchresult!=0){
+				var index = 0;
+				for(tempsearch in $scope.searchresult){
+					//console.log("searchresult.username :: " + $scope.searchresult[tempsearch].username);
+					$scope.isFollowing[index] = false;
+					for(tempfollwing in $scope.currentuserfollowing){
+						//console.log("currentuserfollowing :: " + $scope.currentuserfollowing[tempfollwing]);
+						if($scope.searchresult[tempsearch].username == $scope.currentuserfollowing[tempfollwing]){
+							$scope.isFollowing[index] = true;
+						}
+					}
+					//console.log("i :: " + index + " - isFollowing :: " + $scope.isFollowing[index]);
+					index++;
+				}
+			}
 			/*
 			$scope.name = new Array();
 			$scope.searchusername = new Array();
@@ -70,7 +89,7 @@ userResultsSearch.controller('userResultsSearch', function($scope, $http, $route
 
 	console.log("before getFollowing call");
 
-	//getFollowing
+	/*//getFollowing
 	var getFollowing = function() {
 		$http({
 			method : 'POST',
@@ -122,7 +141,7 @@ userResultsSearch.controller('userResultsSearch', function($scope, $http, $route
 			console.log("in error get followerid");
 			console.log(error);
 		});
-	}
+	}*/
 
 	$scope.viewprofile = function() {
 		console.log("in view profile angular controller");
@@ -174,9 +193,9 @@ userResultsSearch.controller('userResultsSearch', function($scope, $http, $route
 				console.log("searchString:" + searchStr);
 				
 				$http({
-				method : "POST",
+				method : "GET",
 				url : "/userSearchResults",
-				data : {
+				params : {
 					searchUsername : searchStr
 					}
 				}).success( function(data) {
@@ -201,11 +220,13 @@ userResultsSearch.controller('userResultsSearch', function($scope, $http, $route
 				if(searchStr.length>1){
 					console.log("in hashtag search");
 
+					var searchHash = searchStr.split("#")[1];
+
 					$http({
-						method : 'POST',
+						method : 'GET',
 						url : '/searchHashTag',
-						data : {
-							hashtag : searchStr
+						params : {
+							hashtag : searchHash
 						}
 					}).success(function(data) {
 						
@@ -227,24 +248,20 @@ userResultsSearch.controller('userResultsSearch', function($scope, $http, $route
 		}
 	};
 
-	$scope.follow = function(clickedFollowingId) {
+	$scope.follow = function(clickedFollowingUsername, isFollowing) {
 		console.log("in follow function");
-		var isUnfollowed = false;
-
-		for(var i=0;i<$scope.followingid.length;i++) {
-			if(clickedFollowingId == $scope.followingid[i]){
-				
-				isUnfollowed = true;
-
-				//delete following
-				$http({
-					method : 'POST',
-					url : '/deletefollowing',
-					data : {
-						deletefollowingid : clickedFollowingId
-					}
-				}).success(function(data){
-					console.log("in success of delete following users");
+		
+		console.log("clickedFollowingUsername :: " + clickedFollowingUsername);
+		console.log("isFollowing :: " + isFollowing);
+		if(isFollowing){
+			$http({
+				method : 'POST',
+				url : '/deletefollowing',
+				data : {
+					deletefollowingusername : clickedFollowingUsername
+				}
+			}).success(function(data){
+					console.log("in success of delete following user");
 					console.log(data);
 					if(data.statusCode == 401) {
 						console.log("in statusCode=401");
@@ -255,38 +272,34 @@ userResultsSearch.controller('userResultsSearch', function($scope, $http, $route
 						var loc = window.location.toString();
 						console.log(loc);
 						var locationString = loc.split("localhost:3000");
-				    	console.log(locationString[1]);
-				    	window.location.assign(locationString[1]);	
+					   	console.log(locationString[1]);
+					   	window.location.assign(locationString[1]);	
 					}
-				}).error(function(error){
-					console.log("in error of delete following user");
-				});
-			}
-		}
-
-		if(!isUnfollowed) {
-			//insert follower
+			}).error(function(error){
+				console.log("in error of delete following user");
+			});
+		} else {
 			$http({
 				method : 'POST',
 				url : '/insertfollowing',
 				data : {
-						insertfollowingid : clickedFollowingId
-					}
+					insertfollowingusername : clickedFollowingUsername
+				}
 			}).success(function(data){
-				console.log("in success of insert following user");
-				console.log(data);
-				if(data.statusCode == 401) {
-					console.log("in statusCode=401");
-					window.alert("ERROR!");
-				}
-				else if(data.statusCode == 200) {
-					console.log("in statusCode=200");
-					var loc = window.location.toString();
-					console.log(loc);
-					var locationString = loc.split("localhost:3000");
-				   	console.log(locationString[1]);
-				   	window.location.assign(locationString[1]);	
-				}
+					console.log("in success of insert following user");
+					console.log(data);
+					if(data.statusCode == 401) {
+						console.log("in statusCode=401");
+						window.alert("ERROR!");
+					}
+					else if(data.statusCode == 200) {
+						console.log("in statusCode=200");
+						var loc = window.location.toString();
+						console.log(loc);
+						var locationString = loc.split("localhost:3000");
+					   	console.log(locationString[1]);
+					   	window.location.assign(locationString[1]);	
+					}
 			}).error(function(error){
 				console.log("in error of insert following user");
 			});

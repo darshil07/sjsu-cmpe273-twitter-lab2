@@ -1,6 +1,5 @@
 <html>
-<head>
-	
+<head>	
 	<meta charset="utf-8"/>
 
  	<script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
@@ -102,8 +101,6 @@
 	    </div>
 	</div>
 	
-
-
 	<form role="form" name = "useraccount">
 		<div class="container-fluid">
 			
@@ -122,23 +119,23 @@
 				</div>
 				<div class="col-md-5" align="left">
 					<!-- If User's following users have tweets -->
-					<div ng-if="tweet.length>0">
-						<div ng-repeat="tempTweet in tweet">
+					<div ng-if="followingusers.length>0">
+						<div ng-repeat="tempfollower in followingusers">
 							<div>
-								<h3><label>{{followingusername[$index]}}</label></h3>
-								<h4><label>{{tempTweet}}</label></h4>
-								<label>{{date_formatted[$index]}}</label>
-								<label>- {{time[$index]}}</label>
+								<h3><label>{{tempfollower.name}}</label></h3>
+								<h4><label ng-bind-html="toTrustedHTML(tempfollower.tweetstring)">{{tempfollower.tweetstring}}</label></h4>
+								<label>{{tempfollower.date | date : 'medium'}}</label>
+								<!-- <label>- {{time[$index]}}</label> -->
 								
 								<!-- If Retweeted -->
 								<div ng-show="isRetweeted[$index]">
 									<button type="submit" class="btn btn-primary" style="height:35px;"
-			    					ng-model="buttonUndoRetweet" ng-click="retweet(followingtweetid[$index]);">Undo Retweet</button>
+			    					ng-model="buttonUndoRetweet" ng-click="retweet(tempfollower.username, tempfollower.tweetstring, tempfollower.tweetid, tempfollower.date,true);">Undo Retweet</button>
 								</div>
 								<!-- If not Retweeted -->
 								<div ng-show="!isRetweeted[$index]">
 									<button type="submit" class="btn btn-info" style="height:35px;"
-			    					ng-model="buttonRetweet" ng-click="retweet(followingtweetid[$index]);">Retweet</button>
+			    					ng-model="buttonRetweet" ng-click="retweet(tempfollower.username, tempfollower.tweetstring, tempfollower.tweetid, tempfollower.date, false);">Retweet</button>
 								</div>
 								<hr>
 							</div>
@@ -146,7 +143,7 @@
 					</div>
 
 					<!-- If User's following users have no tweets -->
-					<div ng-if="tweet.length == 0">
+					<div ng-if="followingusers.length<1">
 						<h4>No tweets to show</h4>
 					</div>
 					

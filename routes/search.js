@@ -22,24 +22,6 @@ exports.userSearchResults = function(req, res) {
 	
 }
 
-/*exports.userSearchResults = function(req, res) {
-
-	//if(req.session.searchUsername == '') {
-
-		console.log(req.param("searchUsername"));
-		console.log("in userSearchResults node");
-
-		var searchUsername = req.param("searchUsername");
-		//var abc = req.param("tweet");
-
-		//console.log(abc);
-		console.log("searchUsername :: " + searchUsername);
-
-		req.session.searchUsername = searchUsername;
-
-		res.send({statusCode:200});
-}*/
-
 exports.usrSearchResults = function(req, res) {
 
 	console.log("in usrSearchResults");
@@ -70,13 +52,23 @@ exports.searchUser = function(req, res) {
 			console.log("data.length :: " + data.length);
 			if(data) {
 				if(data.length > 0) {
-					json_responses = {
+					Users.findOne({email : req.session.email}, function(err, currentuserdetails) {
+						if(err) {
+							console.log("Error during fetching Current User Details :: " + err);
+						} else {
+							if(currentuserdetails) {
+								json_responses = {
 									"statusCode" : 200, 
 									"userid" : req.session.userid,
 									"username" : req.session.username,
 									"searchresult" : data,
-									"searchUsername" : req.session.searchUsername
+									"searchUsername" : req.session.searchUsername,
+									"currentuserfollowing" : currentuserdetails.following
 								};
+								res.send(json_responses);
+							}
+						}
+					});
 				} else {
 					json_responses = {
 									"statusCode" : 200, 
@@ -84,47 +76,19 @@ exports.searchUser = function(req, res) {
 									"username" : req.session.username,
 									"searchresult" : 0,
 									"searchUsername" : req.session.searchUsername
-								};
+								};	
+					res.send(json_responses);
 				}
 				
-				res.send(json_responses);
 			}
 		}
 	});
-
-	/*var searchUserQuery = "select userid, username, firstname, lastname from users where username like '%" + searchUsername + "%'";
-
-	mysql.fetchData(function(err,results) {
-
-		if(err) {
-			console.log("Error in fetchData");
-			console.log(err);
-			throw err;
-		}
-		else {
-			console.log("User(s) Found!");
-			console.log(results);
-			if(results.length > 0) {
-				json_responses = {
-					"statusCode" : 200,
-					"iduser" : req.session.userid,
-					"results" : results
-				};
-				console.log(json_responses);
-				res.send(json_responses);
-				//res.render("searchresults", {data : json_response});
-			}
-			else {
-
-			}
-		}
-	},searchUserQuery);*/
 }
 
 exports.searchHashTag = function(req, res) {
 	console.log("in searchHashTag node");
 
-	req.session.hashtag = req.param("hashtag");
+	req.session.hashtag = "#" + req.param("hashtag");
 	console.log("session hashtag :: " + req.session.hashtag);
 
 	res.send({statusCode:200})
@@ -145,33 +109,95 @@ exports.searchHash = function(req, res) {
 	console.log("in searchHash node");
 
 	var tag = req.session.hashtag;
-	console.log(tag);
-	var searchHashQuery = "select tweetid from hashtag where hashtagstring='" + tag + "'";
- 	var getSearchTweets = "select users.username, tweet, DATE_FORMAT(date,'%d/%m/%Y') as date_formatted, time from tweets, users where tweetid in (" + searchHashQuery + ") and tweets.userid= users.userid order by date DESC, time DESC";
+	var tagwithouthash = tag.split("#");
+	console.log("tag is :: " + tag);
+	console.log("tagwithouthash is :: " + tagwithouthash[1]);
 	
-	mysql.fetchData(function(err,results) {
 
+
+	query = {'tweet.hashtag' : new RegExp('.*' + tagwithouthash[1] + '.*', "i")};
+	Users.find(query, function(err, data) {
 		if(err) {
-			console.log("Error in fetchData");
-			console.log(err);
-			throw err;
-		}
-		else {
-			console.log("User(s) Found!");
-			console.log(results);
-			if(results.length > 0) {
-				json_responses = {
-					"statusCode" : 200,
-					"iduser" : req.session.userid,
-					"results" : results
-				};
-				console.log(json_responses);
-				res.send(json_responses);
-				//res.render("searchresults", {data : json_response});
-			}
-			else {
+			console.log("ERROR :: " + err);
+			json_responses = {"statusCode" : 401};
+			res.send(json_responses);
+		} else {
+			console.log("data is :: " + data);
 
+			var results = new Array();
+			var indexresults = 0;
+			var booleanforbreaking = false;
+
+			if(data) {
+				if(data.length>0) {
+					for(indexuser in data){
+						if(data[indexuser].tweet.length > 0){
+							for(indextweet in data[indexuser].tweet){
+								booleanforbreaking = false;
+								for(indexhashtag in data[indexuser].tweet[indextweet].hashtag){
+									var temp = data[indexuser].tweet[indextweet].hashtag[indexhashtag];
+									var temphashtag = temp.split("#")[1];
+									if(booleanforbreaking){
+										continue;
+									}
+									if(temphashtag.indexOf(tagwithouthash[1]) > -1) {
+										booleanforbreaking = true;
+										/*console.log("ownername :: " + data[indexuser].tweet[indextweet].ownername);
+										console.log("username :: " + data[indexuser].username);*/
+										if(data[indexuser].tweet[indextweet].ownername == data[indexuser].username){ //checking if its retweeted or not
+											results[indexresults] = {
+												"name" : data[indexuser].firstname + " " +data[indexuser].lastname,
+												"username" : data[indexuser].username,
+												"tweetstring" : data[indexuser].tweet[indextweet].tweetstring,
+												"tweetdate" : data[indexuser].tweet[indextweet].tweetdate,
+												"isretweet" : false
+											}
+										} else {
+											results[indexresults] = {
+												"name" : data[indexuser].firstname + " " +data[indexuser].lastname,
+												"username" : data[indexuser].username,
+												"tweetstring" : data[indexuser].tweet[indextweet].tweetstring,
+												"tweetdate" : data[indexuser].tweet[indextweet].tweetdate,
+												"isretweet" : true,
+												"ownerusername" : data[indexuser].tweet[indextweet].ownername,
+												"originaltweetdate" : data[indexuser].tweet[indextweet].originaltweetdate
+											}
+										}
+										console.log("----------------------------------------------------------------------------");
+										//console.log("temphashtag :: " + temphashtag);
+										console.log("index :: " + indexresults + "  || result ::");
+										if(results[indexresults].isretweet){
+											console.log("name :: " + results[indexresults].name);
+											console.log("username :: " + results[indexresults].username);
+											console.log("tweetstring :: " + results[indexresults].tweetstring);
+											console.log("tweetdate :: " + results[indexresults].tweetdate);
+											console.log("isretweet :: " + results[indexresults].isretweet);
+											console.log("ownerusername :: " + results[indexresults].ownerusername);
+											console.log("originaltweetdate :: " + results[indexresults].originaltweetdate);
+										} else {
+											console.log("name :: " + results[indexresults].name);
+											console.log("username :: " + results[indexresults].username);
+											console.log("tweetstring :: " + results[indexresults].tweetstring);
+											console.log("tweetdate :: " + results[indexresults].tweetdate);
+											console.log("isretweet :: " + results[indexresults].isretweet);
+										}
+										console.log("----------------------------------------------------------------------------");
+										indexresults++;
+									}
+								}
+							}
+						}
+					}
+					json_responses = {"statusCode" : 200, "iduser" : req.session.userid, "username" : req.session.username, "results" : results};
+					res.send(json_responses);
+				} else {
+					json_responses = {"statusCode" : 200, "iduser" : req.session.userid, "username" : req.session.username, "results" : 0};
+					res.send(json_responses);
+				}
+
+				/*json_responses = {"statusCode" : 200, "iduser" : req.session.userid, "username" : req.session.username, "results" : data};
+				res.send(json_responses);*/
 			}
 		}
-	},getSearchTweets);
+	});
 }

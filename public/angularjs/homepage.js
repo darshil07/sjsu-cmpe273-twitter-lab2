@@ -2,8 +2,11 @@ console.log("in homepage.js");
 
 var homepage = angular.module('homepage',['ngRoute']);
 
-homepage.controller('homepage', function($scope, $http, $route) {
-	
+homepage.controller('homepage', function($scope, $http, $route,  $sce) {
+
+	$scope.toTrustedHTML = function (html) {
+    	return $sce.trustAsHtml(html);
+  	};
 
 	//get Tweet, Follower, Following Count
 	$http({
@@ -20,7 +23,7 @@ homepage.controller('homepage', function($scope, $http, $route) {
 
 			$scope.tweetcount = "Tweets : " + data.tweetcount;
 			$scope.followingcount = "Following : " + data.followingcount;
-			$scope.followercount = "Following : " + data.followercount;
+			$scope.followercount = "Followers : " + data.followercount;
 		}
 		else if(data.statusCode == 401) {
 			console.log("statusCode=401");
@@ -34,7 +37,75 @@ homepage.controller('homepage', function($scope, $http, $route) {
 		method : 'POST',
 		url : '/getfollowingtweets'
 	}).success(function(data) {
+		
 		console.log("in getfollowingtweets success");
+		console.log(data);
+		if(data.statusCode==200) {
+			console.log(data.followingdetails);
+
+			$scope.currentuserdetails = data.currentuserdetails;
+			$scope.followingdetails = data.followingdetails;
+			$scope.followingtweet = new Array();
+			$scope.isRetweeted = new Array();
+			$scope.followingusers = new Array();
+
+			var indexforfollowingusers = 0;
+
+			if(data.followingdetails!=0){
+				for(index in data.followingdetails){
+					//console.log("username :: " + data.followingdetails[index].username);
+					if(data.followingdetails[index].tweet.length >0) {
+						//console.log("tweet :: ");
+						for(indextweet in data.followingdetails[index].tweet){
+							//console.log(indextweet + " :: " + data.followingdetails[index].tweet[indextweet].tweetstring);
+							$scope.isRetweeted[indexforfollowingusers] = false;
+							for(indexcurrentusertweet in data.currentuserdetails.tweet) {
+								if(data.currentuserdetails.tweet[indexcurrentusertweet].ownername == data.followingdetails[index].username//) //{
+									&&
+									data.currentuserdetails.tweet[indexcurrentusertweet].originaltweetdate == data.followingdetails[index].tweet[indextweet].tweetdate) {
+									//console.log("matched :: true");
+									console.log("currentuserdetails.originaltweetdate :: " + data.currentuserdetails.tweet[indexcurrentusertweet].originaltweetdate);
+									console.log("followingdetails.tweetdate :: " + data.followingdetails[index].tweet);
+									$scope.isRetweeted[indexforfollowingusers] = true;
+								}
+							}
+							$scope.followingusers[indexforfollowingusers] = {
+								"name" : data.followingdetails[index].firstname + " " + data.followingdetails[index].lastname,
+								"username" : data.followingdetails[index].username,
+								"tweetstring" : data.followingdetails[index].tweet[indextweet].tweetstring,
+								"date" : data.followingdetails[index].tweet[indextweet].tweetdate,
+								"tweetid" : data.followingdetails[index].tweet[indextweet]._id
+							};
+
+							var tagslistarr = $scope.followingusers[indexforfollowingusers].tweetstring.match(/#\S+/g);
+							console.log("tagslistarr :: " + tagslistarr);
+
+							if(tagslistarr!=null)
+								for(tag in tagslistarr) {
+									$scope.followingusers[indexforfollowingusers].tweetstring = $scope.followingusers[indexforfollowingusers].tweetstring.replace(tagslistarr[tag], "<a href = '/searchHashTag?hashtag=" + tagslistarr[tag].substr(1) + "'>" + tagslistarr[tag] + "</a>");
+									console.log("After Replacing tweet :: " + $scope.followingusers[indexforfollowingusers].tweetstring);
+								}
+
+							console.log("----------------------------------------------------------------------------");
+							console.log("indexforfollowingusers :: " + indexforfollowingusers);
+							console.log("firstname :: " + $scope.followingusers[indexforfollowingusers].name);
+							console.log("username :: " + $scope.followingusers[indexforfollowingusers].username);
+							console.log("tweetstring :: " + $scope.followingusers[indexforfollowingusers].tweetstring);
+							console.log("date :: " + $scope.followingusers[indexforfollowingusers].date);
+							console.log("tweetid :: " + data.followingdetails[index].tweet[indextweet]._id);
+							console.log("isRetweeted :: " + $scope.isRetweeted[indexforfollowingusers]);
+							console.log("----------------------------------------------------------------------------");
+							indexforfollowingusers++;
+						}//for loop  tweet
+						
+					}//if condition(if following user has tweet)
+				}//for loop followingdetails - most outer loop
+			}
+		} else if(data.statusCode==401) {
+			console.log("ERROR :: statusCode=401");
+		}
+
+		/*console.log("in getfollowingtweets success");
 		console.log(data);
 		if(data.statusCode==200) {
 			//setting the follwing users' tweets data
@@ -76,7 +147,7 @@ homepage.controller('homepage', function($scope, $http, $route) {
 		else if(data.statusCode==401) {
 			console.log("ERROR :: statusCode=401");
 			$scope.tweet = new Array();
-		}
+		}*/
 	}).error(function(error) {
 		console.log("in getfollowingtweets error");
 	});
@@ -126,13 +197,76 @@ homepage.controller('homepage', function($scope, $http, $route) {
 		});
 	}
 
-	$scope.retweet = function(clickedTweetId) {
+	$scope.retweet = function(followingusername, tweetstring, tweetid, tweetdate, isRetweeted) {
 		console.log("in retweet function");
-		console.log("clickedTweetId :: " + clickedTweetId);
-		console.log($scope.retweetid);
-		var isRetweeted = false;
+		console.log("tweetstring :: " + tweetstring);
+		console.log("tweetid :: " + tweetid);
+		console.log("tweetdate :: " + tweetdate);
+		console.log("isRetweeted :: " + isRetweeted);
+		//console.log($scope.retweetid);
+		//var isRetweeted = false;
 
-		if($scope.retweetid.length>0){
+		if(isRetweeted){ //If retweeted then Undo the Retweet - delete retweet
+
+			$http({
+				method : "POST",
+				url : '/deleteretweet',
+				data : {
+					"followingusername" : followingusername,
+					"tweetid" : tweetid,
+					"tweetstring" : tweetstring,
+					"tweetdate" : tweetdate
+				}
+			}).success(function(data) {
+				console.log("in success of delete retweet");
+						console.log(data);
+						if(data.statusCode == 401) {
+							console.log("in statusCode=401");
+							window.alert("ERROR!");
+						}
+						else if(data.statusCode == 200) {
+							console.log("in statusCode=200");
+							var loc = window.location.toString();
+							console.log(loc);
+							var locationString = loc.split("localhost:3000");
+					    	console.log(locationString[1]);
+					    	window.location.assign(locationString[1]);	
+						}
+					}).error(function(error) {
+						console.log("in error of delete retweet user");
+					});
+
+		} else { //Retweeting
+			$http({
+				method : "POST",
+				url : '/insertretweet',
+				data : {
+					"followingusername" : followingusername,
+					"tweetid" : tweetid,
+					"tweetstring" : tweetstring,
+					"tweetdate" : tweetdate
+				}
+			}).success(function(data) {
+				console.log("in success of insert retweet");
+						console.log(data);
+						if(data.statusCode == 401) {
+							console.log("in statusCode=401");
+							window.alert("ERROR!");
+						}
+						else if(data.statusCode == 200) {
+							console.log("in statusCode=200");
+							var loc = window.location.toString();
+							console.log(loc);
+							var locationString = loc.split("localhost:3000");
+					    	console.log(locationString[1]);
+					    	window.location.assign(locationString[1]);	
+						}
+					}).error(function(error) {
+						console.log("in error of insert retweet user");
+					});
+		}
+
+		/*if($scope.retweetid.length>0){
 			for(var i=0;i<$scope.retweetid.length;i++){
 				if(clickedTweetId == $scope.retweetid[i]){
 					isRetweeted=true;
@@ -166,9 +300,9 @@ homepage.controller('homepage', function($scope, $http, $route) {
 
 				}
 			}
-		}
+		}*/
 
-		if(!isRetweeted){
+		/*if(!isRetweeted){
 
 			//insert Retweet
 			console.log("do retweet");
@@ -197,7 +331,7 @@ homepage.controller('homepage', function($scope, $http, $route) {
 			}).error(function(error){
 				console.log("in error of insert retweet");
 			});
-		}
+		}*/
 	}
 
 	$scope.doTweet = function() {
@@ -261,7 +395,6 @@ homepage.controller('homepage', function($scope, $http, $route) {
 					else if(data.statusCode == 200) {
 						console.log("in statusCode=200");
 						window.location.assign("/usrSearchResults");
-						
 					}
 				}).error(function(error) {
 					console.log("in error of search");
@@ -274,11 +407,13 @@ homepage.controller('homepage', function($scope, $http, $route) {
 				if(searchStr.length>1){
 					console.log("in hashtag search");
 
+					var searchHash = searchStr.split("#")[1];
+
 					$http({
 						method : 'GET',
 						url : '/searchHashTag',
-						data : {
-							hashtag : searchStr
+						params : {
+							hashtag : searchHash
 						}
 					}).success(function(data) {
 						

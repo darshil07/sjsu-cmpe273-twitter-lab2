@@ -31,7 +31,23 @@ searchHash.controller('searchHash', function($scope, $http, $route, $sce) {
 		}
 		else if(data.statusCode == 200) {
 			console.log("searchHash--statusCode == 200");
-			$scope.isTweets=2;
+			
+			$scope.results = data.results;
+
+			var i = 0;
+			for(temp in data.results){
+				console.log("temp :: " + i + " :: " + temp);
+				console.log("tweet :: " + data.results[temp].tweetstring);
+				var tagslistarr = data.results[temp].tweetstring.match(/#\S+/g);
+				console.log("tagslistarr :: " + tagslistarr);
+				for(tag in tagslistarr) {
+					$scope.results[temp].tweetstring = $scope.results[temp].tweetstring.replace(tagslistarr[tag], "<a href = '/searchHashTag?hashtag=" + tagslistarr[tag].substr(1) + "'>" + tagslistarr[tag] + "</a>");
+					console.log("After Replacing tweet :: " + $scope.results[temp].tweetstring);
+				}
+				i++;
+			}
+
+			/*$scope.isTweets=2;
 
 			//setting the search results' data
 			$scope.userid = data.iduser;
@@ -72,7 +88,7 @@ searchHash.controller('searchHash', function($scope, $http, $route, $sce) {
 					$scope.tweet[temp] = $scope.tweet[temp].replace(tagslistarr[tag],"<button type= \"submit\" class=\"btn btn-link\" ng-click=\"searchHash(\'"+ tagslistarr[tag] + "\');\">" + tagslistarr[tag] + "</button>");
 					console.log($scope.tweet);
 				}
-			}
+			}*/
 		}
 	}).error(function(error) {
 		console.log("in searchUser error");
@@ -126,10 +142,10 @@ searchHash.controller('searchHash', function($scope, $http, $route, $sce) {
 				console.log("searchString:" + searchStr);
 				
 				$http({
-				method : "POST",
-				url : "/userSearchResults",
-				data : {
-					searchUsername : searchStr
+					method : "GET",
+					url : "/userSearchResults",
+					params : {
+						searchUsername : searchStr
 					}
 				}).success( function(data) {
 					console.log("in success of search");
@@ -153,11 +169,13 @@ searchHash.controller('searchHash', function($scope, $http, $route, $sce) {
 				if(searchStr.length>1){
 					console.log("in hashtag search");
 
+					var searchHash = searchStr.split("#")[1];
+
 					$http({
-						method : 'POST',
+						method : 'GET',
 						url : '/searchHashTag',
-						data : {
-							hashtag : searchStr
+						params : {
+							hashtag : searchHash
 						}
 					}).success(function(data) {
 						
@@ -180,7 +198,7 @@ searchHash.controller('searchHash', function($scope, $http, $route, $sce) {
 		}
 	};
 
-	$scope.follow = function(clickedFollowingId) {
+	/*$scope.follow = function(clickedFollowingId) {
 		console.log("in follow function");
 		var isUnfollowed = false;
 
@@ -245,4 +263,4 @@ searchHash.controller('searchHash', function($scope, $http, $route, $sce) {
 			});
 		}
 	}
-});
+});*/
